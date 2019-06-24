@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>关于给Android视频播放器封面加载的一种解决方案 // My New Hugo Site</title>
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.55.6" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="https://wangcycoding.github.io/css/main.min.59023e5fd38d6ecb0e1dfbb295077c3c67e00e3b9eb3feaf34b5a5e6b332897a.css" />
+
+    
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="关于给Android视频播放器封面加载的一种解决方案"/>
+<meta name="twitter:description" content="借鉴自这里，请点击
+总体思路就是开线程获取第一帧并存到本地，用数据库保存播放链接和第一帧图片的本地地址，第二次打开做判断，先在数据库存储查询，看是否存在，如果存在就把地址取出来加载。
+首先你需要写一个Thread类，用来调用获取视频第一帧的封面，为什么要建一个线程类呢，因为在获取封面过程中调用包括setDataSource(String url)和getFrameAtTime(long timeMs,int option)方法都是很耗时的操作，所以要在子线程中获取，获取完成之后，在用handler去更新适配器UI。 好了，下面咱们开始吧： Thread类：
+package cn.wangcy.demo.ffcd.thread; import android.content.Context; import android.graphics.Bitmap; import android.graphics.Matrix; import android.media.MediaMetadataRetriever; import android.os.Build; import android.os.Environment; import android.os.Handler; import android.os.Message; import android.text.TextUtils; import android.widget.ImageView; import java.util.ArrayList; import java.util.HashMap; import java.util.List; import cn.wangcy.demo.ffcd.bean.VideoDataBean; import cn.wangcy.demo.ffcd.db.DbManager; import cn.wangcy.demo.ffcd.utils.LogUtils; import cn.wangcy.demo.ffcd.utils.PictureUtils; /** * Created by wangchuanyu on 2018/7/16. */ public class CreateFirstFrameBitmapThread extends Thread { private List&lt;VideoDataBean&gt; mDatas; private int width = 0; private int height = 0; private ImageView videoCover = null; private final String OutPutFileDirPath = Environment."/>
+
+    <meta property="og:title" content="关于给Android视频播放器封面加载的一种解决方案" />
+<meta property="og:description" content="借鉴自这里，请点击
+总体思路就是开线程获取第一帧并存到本地，用数据库保存播放链接和第一帧图片的本地地址，第二次打开做判断，先在数据库存储查询，看是否存在，如果存在就把地址取出来加载。
+首先你需要写一个Thread类，用来调用获取视频第一帧的封面，为什么要建一个线程类呢，因为在获取封面过程中调用包括setDataSource(String url)和getFrameAtTime(long timeMs,int option)方法都是很耗时的操作，所以要在子线程中获取，获取完成之后，在用handler去更新适配器UI。 好了，下面咱们开始吧： Thread类：
+package cn.wangcy.demo.ffcd.thread; import android.content.Context; import android.graphics.Bitmap; import android.graphics.Matrix; import android.media.MediaMetadataRetriever; import android.os.Build; import android.os.Environment; import android.os.Handler; import android.os.Message; import android.text.TextUtils; import android.widget.ImageView; import java.util.ArrayList; import java.util.HashMap; import java.util.List; import cn.wangcy.demo.ffcd.bean.VideoDataBean; import cn.wangcy.demo.ffcd.db.DbManager; import cn.wangcy.demo.ffcd.utils.LogUtils; import cn.wangcy.demo.ffcd.utils.PictureUtils; /** * Created by wangchuanyu on 2018/7/16. */ public class CreateFirstFrameBitmapThread extends Thread { private List&lt;VideoDataBean&gt; mDatas; private int width = 0; private int height = 0; private ImageView videoCover = null; private final String OutPutFileDirPath = Environment." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://wangcycoding.github.io/post/blog/" />
+<meta property="article:published_time" content="2019-06-24T23:24:01&#43;08:00"/>
+<meta property="article:modified_time" content="2019-06-24T23:24:01&#43;08:00"/>
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wangcycoding.github.io/"><img class="app-header-avatar" src="/avatar.jpg" alt="John Doe" /></a>
+      <h1>My New Hugo Site</h1>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vehicula turpis sit amet elit pretium.</p>
+      <div class="app-header-social">
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">关于给Android视频播放器封面加载的一种解决方案</h1>
+      <div class="post-meta">
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-calendar">
+  <title>calendar</title>
+  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+</svg>
+          Jun 24, 2019
+        </div>
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-clock">
+  <title>clock</title>
+  <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+          7 min read
+        </div></div>
+    </header>
+    <div class="post-content">
+      <p><a href="https://blog.csdn.net/ta893115871/article/details/69218543">借鉴自这里，请点击</a></p>
+
+<p>总体思路就是开线程获取第一帧并存到本地，用数据库保存播放链接和第一帧图片的本地地址，第二次打开做判断，先在数据库存储查询，看是否存在，如果存在就把地址取出来加载。</p>
+
+<p>首先你需要写一个Thread类，用来调用获取视频第一帧的封面，为什么要建一个线程类呢，因为在获取封面过程中调用包括<code>setDataSource(String url)</code>和<code>getFrameAtTime(long timeMs,int option)</code>方法都是很耗时的操作，所以要在子线程中获取，获取完成之后，在用handler去更新适配器UI。
+好了，下面咱们开始吧：
+Thread类：</p>
+
+<pre><code>package cn.wangcy.demo.ffcd.thread;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.MediaMetadataRetriever;
+import android.os.Build;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.text.TextUtils;
+import android.widget.ImageView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import cn.wangcy.demo.ffcd.bean.VideoDataBean;
+import cn.wangcy.demo.ffcd.db.DbManager;
+import cn.wangcy.demo.ffcd.utils.LogUtils;
+import cn.wangcy.demo.ffcd.utils.PictureUtils;
+
+/**
+* Created by wangchuanyu on 2018/7/16.
+*/
+
+public class CreateFirstFrameBitmapThread extends Thread {
+
+private List&lt;VideoDataBean&gt; mDatas;
+private int width = 0;
+private int height = 0;
+private ImageView videoCover = null;
+private final String OutPutFileDirPath = Environment.getExternalStorageDirectory() + &quot;/first_frame&quot;;
+private Handler handler;
+private DbManager manager;
+private long fileLength;
+private int posIndex = 0;
+
+
+public CreateFirstFrameBitmapThread(List&lt;VideoDataBean&gt; mDatas, int width, int height, ImageView videoCover, Handler handler) {
+this.mDatas = mDatas;
+this.width = width;
+this.height = height;
+this.videoCover = videoCover;
+this.handler = handler;
+}
+
+public CreateFirstFrameBitmapThread(Context context, List&lt;VideoDataBean&gt; mDatas, Handler handler) {
+this.mDatas = mDatas;
+this.handler = handler;
+manager = new DbManager(context);
+}
+
+public CreateFirstFrameBitmapThread(Context context, List&lt;VideoDataBean&gt; mDatas, Handler handler, int i) {
+this.mDatas = mDatas;
+this.handler = handler;
+this.posIndex = i;
+manager = new DbManager(context);
+}
+
+public CreateFirstFrameBitmapThread() {
+
+}
+
+@Override
+public void run() {
+super.run();
+for (int i = posIndex; i &lt; mDatas.size(); i++) {
+createBitmapFromVideoPath(i, mDatas.get(i).getmVideoUrl());
+}
+}
+
+/**
+* 获取第一帧的方法，通过上方for循环进行获取第一帧
+* @param positon
+* @param url
+*/
+public void createBitmapFromVideoPath(int positon, String url) {
+synchronized (this) {
+Bitmap bitmap = null;
+MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+try {
+if (Build.VERSION.SDK_INT &gt;= 12) {
+retriever.setDataSource(url, new HashMap&lt;String, String&gt;());
+} else {
+retriever.setDataSource(url);
+}
+bitmap = retriever.getFrameAtTime(1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+String len = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+fileLength = TextUtils.isEmpty(len) ? 0 : Long.valueOf(len);
+
+Bitmap bitmapNew = /*scaleImage(bitmap)*/bitmap;
+//                Bitmap bitmapNew = /*scaleImage(bitmap)*/zoomImage(bitmap,100,100);
+String path = PictureUtils.saveImageToSDForEdit(bitmapNew, OutPutFileDirPath, positon + &quot;_FirstFrame_ffcd&quot;  + PictureUtils.POSTFIX);
+VideoDataBean bean = mDatas.get(positon);
+manager.addImage(bean);
+
+//            sendPic(bitmapNew, positon);
+sendPic(path, bitmapNew, positon);
+} catch (IllegalArgumentException ex) {
+ex.printStackTrace();
+} catch (RuntimeException ex) {
+ex.printStackTrace();
+} catch (Exception ex) {
+
+} finally {
+try {
+retriever.release();
+} catch (RuntimeException ex) {
+ex.printStackTrace();
+}
+}
+}
+
+}
+
+/**
+* 压缩图片
+* @param bitmap
+* @param newWidth
+* @param newHeight
+* @return
+*/
+public static Bitmap zoomImage(Bitmap bitmap, int newWidth, int newHeight) {
+// 获得图片的宽高
+int width = bitmap.getWidth();
+int height = bitmap.getHeight();
+// 计算缩放比例
+float scaleWidth = ((float) newWidth) / width;
+float scaleHeight = ((float) newHeight) / height;
+// 取得想要缩放的matrix参数
+Matrix matrix = new Matrix();
+matrix.postScale(scaleWidth, scaleHeight);
+// 得到新的图片
+return Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+}
+
+/**
+* 发送图片到handler，更新UI
+* @param path
+* @param bitmap
+* @param positon
+*/
+public void sendPic(String path, Bitmap bitmap, int positon) {
+Message msg = new Message();
+msg.what = 0;
+msg.arg1 = positon;
+msg.obj = path;
+handler.sendMessage(msg);
+}
+
+/**
+* 发送图片到handler，更新UI(以list形式传递数据，主要用于更新bitmap类型的数据)
+* @param bitmap
+* @param positon
+*/
+public void sendPic(Bitmap bitmap, int positon) {
+Message msg = new Message();
+msg.what = 0;
+List list = new ArrayList();
+list.add(bitmap);
+msg.obj = list;  //handler传递对象
+msg.arg1 = positon;
+handler.sendMessage(msg);
+}
+}
+</code></pre>
+
+<p>有了这个线程，就可以在适当的时候不耗时的状态下进行获取第一帧。</p>
+
+<p>接下来就是数据库的创建</p>
+
+<pre><code>/**
+* 数据库基础类，用于创建数据库
+**/
+public class DbHelper extends SQLiteOpenHelper {
+private static final String name = &quot;your dbName&quot;; //数据库名称
+private static final int version = 1; //数据库版本
+
+public DbHelper(Context context) {
+super(context, name, null, version);
+}
+
+@Override
+public void onCreate(SQLiteDatabase db) {
+db.execSQL(&quot;CREATE TABLE IF NOT EXISTS &quot;+ &quot;your table name&quot;+&quot; (id integer primary key autoincrement, name text, imgurl text, videourl text)&quot;);
+}
+
+@Override
+public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+}
+}
+
+
+
+/**
+* 数据库工具类
+*/
+public class DbManager {
+private BaisongDbHelper dbHelper;
+private SQLiteDatabase db;
+public static int dbSize = 0;
+
+public DbManager(Context context) {
+dbHelper = new BaisongDbHelper(context);
+db = dbHelper.getReadableDatabase();
+}
+
+/**
+* 添加图片到数据库
+*/
+public void addMustImage(String video_url, String image_url) {
+if (find_video_url(video_url)!=null){
+updateMustVideo(video_url);
+return;
+}
+if (find_image_url(image_url)!=null){
+updateMustImage(video_url,image_url);
+return;
+}
+ContentValues cv = new ContentValues();
+cv.put(&quot;videourl&quot;, video_url);
+cv.put(&quot;imgurl&quot;, image_url);
+long id = db.insert(ConfigYibaisong.MUST_IMAGE, null, cv);//插入数据库
+
+//--------以下是利用数组打印插入数据的代码--------------
+Cursor cursor = db.query(ConfigYibaisong.MUST_IMAGE, null, &quot;videourl=?&quot; + &quot; and &quot; + &quot;imgurl=?&quot;, new String[]{video_url, image_url}, null, null, null);
+ArrayList&lt;HashMap&lt;String, String&gt;&gt; AL = new ArrayList&lt;HashMap&lt;String, String&gt;&gt;();
+if (cursor.moveToNext()) {
+for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+HashMap&lt;String, String&gt; hm = new HashMap&lt;&gt;();
+hm.put(&quot;videourl&quot;, cursor.getString(cursor.getColumnIndex(&quot;videourl&quot;)));
+hm.put(&quot;imgurl&quot;, cursor.getString(cursor.getColumnIndex(&quot;imgurl&quot;)));
+AL.add(hm);
+}
+cursor.close();
+}
+if (id != -1) Log.d(&quot;zzzzzzzzz&quot;, &quot;插入成功  &quot; + AL.toString());
+else Log.d(&quot;zzzzzzzzz&quot;, &quot;插入失败&quot;);
+//        db.close();
+//        db.insert(ConfigYibaisong.MUST_IMAGE, null, cv);
+}
+/**
+* 更新图片
+*/
+public void updateMustVideo(String video_url){
+ContentValues cv = new ContentValues();
+cv.put(&quot;videourl&quot;, video_url);
+long id = db.update(ConfigYibaisong.MUST_IMAGE,  cv,&quot;videourl=?&quot;,new String[]{video_url});//插入数据库
+if (id != -1) LogHelper.d(&quot;zzzzzzzzz&quot;, &quot;更新成功  &quot;);
+else LogHelper.d(&quot;zzzzzzzzz&quot;, &quot;更新失败&quot;);
+}
+/**
+* 更新图片
+*/
+public void updateMustImage(String video_url,String image_url){
+ContentValues cv = new ContentValues();
+cv.put(&quot;imgurl&quot;, image_url);
+long id = db.update(ConfigYibaisong.MUST_IMAGE,  cv,&quot;videourl=?&quot;,new String[]{video_url});//插入数据库
+if (id != -1) Log.d(&quot;zzzzzzzzz&quot;, &quot;更新成功  &quot;);
+else Log.d(&quot;zzzzzzzzz&quot;, &quot;更新失败&quot;);
+}
+
+/**
+* 查找video地址
+*/
+public String find_video_url(String video_url){
+Cursor cursor = db.query(ConfigYibaisong.MUST_IMAGE, null, &quot;videourl=?&quot; , new String[]{video_url}, null, null, null);
+if (cursor.moveToNext()) {
+for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+return cursor.getString(cursor.getColumnIndex(&quot;videourl&quot;));
+}
+cursor.close();
+}
+return null;
+}
+/**
+* 查找图片地址
+*/
+public String find_image_url(String image_url){
+Cursor cursor = db.query(ConfigYibaisong.MUST_IMAGE, null, &quot;imgurl=?&quot; , new String[]{image_url}, null, null, null);
+if (cursor.moveToNext()) {
+for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+return cursor.getString(cursor.getColumnIndex(&quot;imgurl&quot;));
+}
+cursor.close();
+}
+return null;
+}
+
+public void DbClose() {
+db.close();
+}
+
+public long getCount() {
+return db.getMaximumSize();
+}
+
+/**
+* 根据给定video地址查询本地图片地址
+*/
+public String findMustImage(int position, String video_url, String image_url) {
+if (TextUtils.isEmpty(video_url) || TextUtils.isEmpty(image_url))
+return &quot;&quot;;
+if (tabbleIsExist(db, ConfigYibaisong.MUST_IMAGE)) {
+Cursor cursor = db.query(ConfigYibaisong.MUST_IMAGE, null, &quot;videourl=?&quot; + &quot; and &quot; + &quot;imgurl=?&quot;, new String[]{video_url, image_url}, null, null, null);
+String cursorStr = &quot;&quot;;
+try {
+cursorStr = cursor.getString(cursor.getColumnIndex(&quot;imgurl&quot;));
+cursor.close();
+} catch (CursorIndexOutOfBoundsException e) {
+cursorStr = null;
+}
+return cursorStr;
+//            }
+
+}
+return null;
+}
+
+/**
+* 根据给定video地址查询本地图片地址
+*/
+public String findMustImage(String video_url) {
+if (TextUtils.isEmpty(video_url))
+return &quot;&quot;;
+if (tabbleIsExist(db, ConfigYibaisong.MUST_IMAGE)) {
+Cursor cursor = db.query(ConfigYibaisong.MUST_IMAGE, new String[]{&quot;imgurl&quot;}, &quot;videourl=?&quot;, new String[]{video_url}, null, null, null);
+String cursorStr = &quot;&quot;;
+if(cursor.moveToNext()){
+try {
+cursorStr = cursor.getString(0);
+cursor.close();
+return cursorStr;
+} catch (CursorIndexOutOfBoundsException e) {
+cursorStr = null;
+
+}
+return cursorStr;
+}
+
+//            }
+
+}
+return null;
+}
+
+public List&lt;NewMustClassBean.DataBean&gt; findAllImageForMustCover(List&lt;NewMustClassBean.DataBean&gt; mDatas) {
+for (int i = 0; i &lt; mDatas.size(); i++) {
+try {
+Cursor cursor = db.query(ConfigYibaisong.MUST_IMAGE, new String[]{&quot;imgurl&quot;}, &quot;videourl=?&quot;, new String[]{mDatas.get(i).getVideo()}, null, null, null);
+mDatas.get(i).setVideoCover(cursor.getString(cursor.getColumnIndex(&quot;imgurl&quot;)));
+} catch (CursorIndexOutOfBoundsException e) {
+return mDatas;
+}
+
+}
+return mDatas;
+}
+/**
+* 根据给定video地址查询本地图片地址
+*/
+public void findImageMustCover(String videourl,List&lt;NewMustClassBean.DataBean&gt; mDatas,int position) {
+try {
+List&lt;NewMustClassBean.DataBean&gt; mMusts = new ArrayList&lt;&gt;();
+Cursor cursor = db.query(ConfigYibaisong.MUST_IMAGE, new String[]{&quot;imgurl&quot;}, &quot;videourl=?&quot;, new String[]{videourl}, null, null, null);
+while (cursor.moveToNext()) {
+NewMustClassBean.DataBean bean = new NewMustClassBean.DataBean();
+bean.setVideoCover(cursor.getString(cursor.getColumnIndex(&quot;imgurl&quot;)));
+mMusts.add(bean);
+}
+
+mDatas.get(position).setVideoCover(mMusts.get(position).getVideoCover());
+
+
+} catch (CursorIndexOutOfBoundsException e) {
+
+
+}
+}
+
+
+//删除某一个表
+public void dropTable() {
+db.delete(ConfigYibaisong.MUST_IMAGE, null, null);
+}
+
+//判断一个表是否存在
+public boolean tabbleIsExist(SQLiteDatabase db, String tableName) {
+boolean result = false;
+if (tableName == null) {
+return false;
+}
+Cursor cursor = null;
+try {
+String sql = &quot;select count(*) as c from Sqlite_master  where type ='table' and name ='&quot; + tableName.trim() + &quot;' &quot;;
+cursor = db.rawQuery(sql, null);
+if (cursor.moveToNext()) {
+int count = cursor.getInt(0);
+if (count &gt; 0) {
+result = true;
+}
+}
+
+} catch (Exception e) {
+// TODO: handle exception
+}
+return result;
+}
+
+}
+
+
+</code></pre>
+
+<p>创建完数据库，接下来就是把图片存入内存，拿到地址，放到数据库，以方便对本地图片的取出加载。</p>
+
+<pre><code>/**
+* 保存图片到本地
+**/
+public class PictureUtils {
+public static final String POSTFIX = &quot;.jpeg&quot;;
+
+public static String saveImageToSD(Bitmap bmp, String dirPath) {
+if (bmp == null) {
+return &quot;&quot;;
+}
+File appDir = new File(dirPath);
+if (!appDir.exists()) {
+appDir.mkdir();
+}
+String fileName = System.currentTimeMillis() + &quot;.jpg&quot;;
+File file = new File(appDir, fileName);
+try {
+FileOutputStream fos = new FileOutputStream(file);
+bmp.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+fos.flush();
+fos.close();
+} catch (IOException e) {
+e.printStackTrace();
+}
+return file.getAbsolutePath();
+}
+
+
+
+public static String saveImageToSDForEdit(Bitmap bmp, String dirPath, String fileName) {
+if (bmp == null) {
+return &quot;&quot;;
+}
+File appDir = new File(dirPath);
+if (!appDir.exists()) {
+appDir.mkdir();
+}
+File file = new File(appDir, fileName);
+if (file.exists()){
+return file.getAbsolutePath();
+}
+try {
+FileOutputStream fos = new FileOutputStream(file);
+bmp.compress(Bitmap.CompressFormat.JPEG, 80, fos);
+fos.flush();
+fos.close();
+} catch (IOException e) {
+e.printStackTrace();
+return &quot;null&quot;;
+}
+return file.getAbsolutePath();
+}
+
+public static void deleteFile(File f) {
+if (f.isDirectory()) {
+File[] files = f.listFiles();
+if (files != null &amp;&amp; files.length &gt; 0) {
+for (int i = 0; i &lt; files.length; ++i) {
+deleteFile(files[i]);
+}
+}
+}
+f.delete();
+}
+
+}
+</code></pre>
+
+<p>保存完图片了，也建立了数据库了，那接下来就是把图片地址存到数据库，并在第二次开启时取出本地图片，利用glide加载到界面上就行了。再贴一个handler吧，用于更新获取完第一帧，实时更新UI的过程。</p>
+
+<pre><code>/**
+* 在更新UI的方法
+*/
+private Handler handler = new Handler() {
+
+public void handleMessage(Message msg) {
+switch (msg.what) {
+case 0:  //接到从线程内传来的图片bitmap和imageView.
+//这里只是将bitmap传到imageView中就行了。只所以不在线程中做是考虑到线程的安全性
+mDatas.get(msg.arg1).setmVideoCover(&quot;file://&quot; + msg.obj);
+try {
+if (!TextUtils.equals(mDatas.get(msg.arg1).getmVideoCover(), &quot;file://null&quot;))
+manager.addImage(mDatas.get(msg.arg1));
+
+}catch (Exception ex){
+}
+notifyItemChanged(msg.arg1);
+//                    notifyDataSetChanged();
+
+
+break;
+
+default:
+super.handleMessage(msg);
+break;
+}
+}
+
+;
+};
+</code></pre>
+
+<p>当然别忘了添加网络请求和动态请求读写的使用权限~。
+希望这个思路能对大家有所帮助。</p>
+
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>
