@@ -2,13 +2,48 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>My New Hugo Site</title>
-    <link>https://wangcycoding.github.io/</link>
+    <link>http://wangcycoding.github.io/</link>
     <description>Recent content on My New Hugo Site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
+    <lastBuildDate>Wed, 03 Jul 2019 00:32:46 +0800</lastBuildDate>
     
-	<atom:link href="https://wangcycoding.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://wangcycoding.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>mac os 系统下需要安装的eclipse插件及如果Tomcat安装不上时的解决办法。</title>
+      <link>http://wangcycoding.github.io/post/first/</link>
+      <pubDate>Wed, 03 Jul 2019 00:32:46 +0800</pubDate>
+      
+      <guid>http://wangcycoding.github.io/post/first/</guid>
+      <description>刚下载完成的eclipse需要安装java web所有类型的插件，之后再按照网上Tomcat安装步骤进行安装，不然即使把下载完成的插件复制到plugins中，它扔不能产生作用。你可能需要安装的web插件有：
+Eclipse Faceted Project Framework
+Eclipse Faceted Project Framework JDT Enablement
+Eclipse Java EE Developer Tools
+Eclipse Java Web Developer Tools
+Eclipse SDK
+Eclipse Web Developer Tools
+Eclipse XML Editors and Tools
+Eclipse XSL Developer Tools
+JavaScript Development Tools
+JST Server Adapters
+JST Server Adapters Extensions
+JST Serer UI
+WST Server Adapters</description>
+    </item>
+    
+    <item>
+      <title>关于给Android视频播放器封面加载的一种解决方案</title>
+      <link>http://wangcycoding.github.io/post/blog/</link>
+      <pubDate>Mon, 24 Jun 2019 23:24:01 +0800</pubDate>
+      
+      <guid>http://wangcycoding.github.io/post/blog/</guid>
+      <description>借鉴自这里，请点击
+总体思路就是开线程获取第一帧并存到本地，用数据库保存播放链接和第一帧图片的本地地址，第二次打开做判断，先在数据库存储查询，看是否存在，如果存在就把地址取出来加载。
+首先你需要写一个Thread类，用来调用获取视频第一帧的封面，为什么要建一个线程类呢，因为在获取封面过程中调用包括setDataSource(String url)和getFrameAtTime(long timeMs,int option)方法都是很耗时的操作，所以要在子线程中获取，获取完成之后，在用handler去更新适配器UI。 好了，下面咱们开始吧： Thread类：
+package cn.wangcy.demo.ffcd.thread; import android.content.Context; import android.graphics.Bitmap; import android.graphics.Matrix; import android.media.MediaMetadataRetriever; import android.os.Build; import android.os.Environment; import android.os.Handler; import android.os.Message; import android.text.TextUtils; import android.widget.ImageView; import java.util.ArrayList; import java.util.HashMap; import java.util.List; import cn.wangcy.demo.ffcd.bean.VideoDataBean; import cn.wangcy.demo.ffcd.db.DbManager; import cn.wangcy.demo.ffcd.utils.LogUtils; import cn.wangcy.demo.ffcd.utils.PictureUtils; /** * Created by wangchuanyu on 2018/7/16. */ public class CreateFirstFrameBitmapThread extends Thread { private List&amp;lt;VideoDataBean&amp;gt; mDatas; private int width = 0; private int height = 0; private ImageView videoCover = null; private final String OutPutFileDirPath = Environment.</description>
+    </item>
     
   </channel>
 </rss>

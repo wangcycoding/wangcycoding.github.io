@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" content="John Doe" />
     <meta name="description" content="" />
-    <link rel="stylesheet" href="https://wangcycoding.github.io/css/main.min.59023e5fd38d6ecb0e1dfbb295077c3c67e00e3b9eb3feaf34b5a5e6b332897a.css" />
+    <link rel="stylesheet" href="http://wangcycoding.github.io/css/main.min.59023e5fd38d6ecb0e1dfbb295077c3c67e00e3b9eb3feaf34b5a5e6b332897a.css" />
 
     
     <meta name="twitter:card" content="summary"/>
@@ -23,7 +23,7 @@ package cn.wangcy.demo.ffcd.thread; import android.content.Context; import andro
 首先你需要写一个Thread类，用来调用获取视频第一帧的封面，为什么要建一个线程类呢，因为在获取封面过程中调用包括setDataSource(String url)和getFrameAtTime(long timeMs,int option)方法都是很耗时的操作，所以要在子线程中获取，获取完成之后，在用handler去更新适配器UI。 好了，下面咱们开始吧： Thread类：
 package cn.wangcy.demo.ffcd.thread; import android.content.Context; import android.graphics.Bitmap; import android.graphics.Matrix; import android.media.MediaMetadataRetriever; import android.os.Build; import android.os.Environment; import android.os.Handler; import android.os.Message; import android.text.TextUtils; import android.widget.ImageView; import java.util.ArrayList; import java.util.HashMap; import java.util.List; import cn.wangcy.demo.ffcd.bean.VideoDataBean; import cn.wangcy.demo.ffcd.db.DbManager; import cn.wangcy.demo.ffcd.utils.LogUtils; import cn.wangcy.demo.ffcd.utils.PictureUtils; /** * Created by wangchuanyu on 2018/7/16. */ public class CreateFirstFrameBitmapThread extends Thread { private List&lt;VideoDataBean&gt; mDatas; private int width = 0; private int height = 0; private ImageView videoCover = null; private final String OutPutFileDirPath = Environment." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://wangcycoding.github.io/post/blog/" />
+<meta property="og:url" content="http://wangcycoding.github.io/post/blog/" />
 <meta property="article:published_time" content="2019-06-24T23:24:01&#43;08:00"/>
 <meta property="article:modified_time" content="2019-06-24T23:24:01&#43;08:00"/>
 
@@ -31,7 +31,7 @@ package cn.wangcy.demo.ffcd.thread; import android.content.Context; import andro
   </head>
   <body>
     <header class="app-header">
-      <a href="https://wangcycoding.github.io/"><img class="app-header-avatar" src="/avatar.jpg" alt="John Doe" /></a>
+      <a href="http://wangcycoding.github.io"><img class="app-header-avatar" src="/avatar.jpg" alt="John Doe" /></a>
       <h1>My New Hugo Site</h1>
       <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vehicula turpis sit amet elit pretium.</p>
       <div class="app-header-social">
