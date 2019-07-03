@@ -3,34 +3,17 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://wangcycoding.github.io/</loc>
-    <lastmod>2019-07-03T00:32:46+08:00</lastmod>
+    <loc>wangcycoding.github.iow/categories/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://wangcycoding.github.io/post/</loc>
-    <lastmod>2019-07-03T00:32:46+08:00</lastmod>
+    <loc>wangcycoding.github.iow/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://wangcycoding.github.io/post/first/</loc>
-    <lastmod>2019-07-03T00:32:46+08:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://wangcycoding.github.io/post/blog/</loc>
-    <lastmod>2019-06-24T23:24:01+08:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://wangcycoding.github.io/categories/</loc>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://wangcycoding.github.io/tags/</loc>
+    <loc>wangcycoding.github.iow/tags/</loc>
     <priority>0</priority>
   </url>
   
